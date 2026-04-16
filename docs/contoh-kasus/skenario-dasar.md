@@ -5,7 +5,7 @@ description: Contoh implementasi lengkap untuk perusahaan outsourcing dengan sat
 
 # Skenario Dasar: Satu Klien, Beberapa Karyawan
 
-Skenario ini menggambarkan implementasi lengkap untuk sebuah **perusahaan outsourcing kecil** yang menempatkan karyawannya di satu klien.
+Skenario ini menggambarkan implementasi lengkap untuk sebuah **perusahaan outsourcing kecil** yang menempatkan karyawan di satu klien, mencakup seluruh alur dari pembuatan perjanjian outsource hingga invoice dikirim ke klien.
 
 ---
 
@@ -17,7 +17,6 @@ Skenario ini menggambarkan implementasi lengkap untuk sebuah **perusahaan outsou
 | **Klien** | PT. Karya Utama (pabrik manufaktur) |
 | **Jumlah Karyawan** | 3 orang operator produksi |
 | **Periode** | Januari 2025 |
-| **Kebutuhan** | Proses gaji bulanan dan tagih ke klien |
 
 ---
 
@@ -31,75 +30,94 @@ Skenario ini menggambarkan implementasi lengkap untuk sebuah **perusahaan outsou
 
 ---
 
-## Implementasi Langkah demi Langkah
+## Implementasi Lengkap
 
 ### Tahap 1: Konfigurasi Awal (Dilakukan Sekali)
 
 **1.1 — Konfigurasi Struktur Gaji**
 
-Buat struktur gaji `Gaji Operator Produksi` dengan komponen:
+Buat struktur `Gaji Operator Produksi` dengan komponen:
 
 | Komponen | Cara Hitung |
 |---|---|
-| Gaji Pokok | Dari input perjanjian |
-| Tunjangan Transportasi | Dari input perjanjian |
-| Tunjangan Makan | Dari input perjanjian |
+| Gaji Pokok | Dari input perjanjian karyawan |
+| Tunjangan Transportasi | Dari input perjanjian karyawan |
+| Tunjangan Makan | Dari input perjanjian karyawan |
 | BPJS Kesehatan Karyawan | 1% × Gaji Pokok |
 | BPJS Kesehatan Perusahaan | 4% × Gaji Pokok |
 | BPJS TK JHT Karyawan | 2% × Gaji Pokok |
 | BPJS TK JHT Perusahaan | 3.7% × Gaji Pokok |
 | Gaji Bersih | Gross − Potongan |
 
-**1.2 — Konfigurasi Tipe Penugasan**
+**1.2 — Konfigurasi Komponen Gaji untuk Invoicing**
 
-| Field | Nilai |
+Setiap komponen yang akan ditagihkan ke klien perlu memiliki **produk** yang menjadi baris invoice:
+
+| Komponen Gaji | Produk Invoice |
 |---|---|
-| Nama | `Penugasan Operator - Klien Industri` |
-| Filter Karyawan | Semua karyawan dengan jabatan Operator |
-| Filter Klien | Semua mitra dengan industri Manufaktur |
-
-**1.3 — Konfigurasi Tipe Perjanjian**
-
-| Field | Nilai |
-|---|---|
-| Nama | `Perjanjian Outsource Operator` |
-| Format Nomor | `PA-OP/%(year)s/%(month)s/%(seq)s` |
+| Gaji Pokok | `Biaya Gaji Pokok Outsource` |
+| Tunjangan Transportasi | `Biaya Tunjangan Outsource` |
+| Tunjangan Makan | `Biaya Tunjangan Outsource` |
+| BPJS Kesehatan Perusahaan | `Biaya BPJS Outsource` |
+| BPJS TK JHT Perusahaan | `Biaya BPJS Outsource` |
 
 ---
 
-### Tahap 2: Onboarding Karyawan (Dilakukan Saat Karyawan Bergabung)
+### Tahap 2: Buat Perjanjian Outsource dengan PT. Karya Utama
 
-#### 2.1 — Penugasan Budi Santoso
+**Menu:** `Human Resources > External Assignment > Agreements > Baru`
 
-Karena ketiga karyawan baru bergabung di bulan yang sama, buat tiga dokumen penugasan:
+| Field | Nilai |
+|---|---|
+| Tipe Perjanjian | `Outsourcing Operator Produksi` |
+| Judul | `Perjanjian Penyediaan Tenaga Kerja 2025` |
+| Klien | `PT. Karya Utama` |
+| Tanggal Mulai | `01/01/2025` |
+| Tanggal Selesai | `31/12/2025` |
+| Jurnal Invoice | `Jurnal Penjualan` |
+| Akun Piutang | `113100 - Piutang Usaha` |
 
-**Penugasan 1 — Budi Santoso**
+**Detail Posisi:**
+
+| Posisi | Kuota |
+|---|---|
+| Operator Produksi | 5 orang |
+
+**Termin Kompensasi untuk Operator Produksi:**
+
+| Komponen | Min | Max |
+|---|---|---|
+| Gaji Pokok | Rp 3.800.000 | Rp 5.000.000 |
+| Tunjangan Transportasi | Rp 400.000 | Rp 600.000 |
+| Tunjangan Makan | Rp 300.000 | Rp 300.000 |
+
+Proses: Konfirmasi → Setujui → **Status: Aktif**  
+Nomor: `EEAA/2025/000001`
+
+---
+
+### Tahap 3: Onboarding Karyawan
+
+**3.1 — Penugasan Karyawan ke PT. Karya Utama**
+
+Buat tiga dokumen penugasan dan hubungkan ke perjanjian outsource:
 
 | Field | Nilai |
 |---|---|
 | Tipe Penugasan | `Penugasan Operator - Klien Industri` |
-| Karyawan | `Budi Santoso` |
 | Klien | `PT. Karya Utama` |
+| **Perjanjian Outsource** | `EEAA/2025/000001` |
 | Tanggal Mulai | `01/01/2025` |
 
-Proses: Konfirmasi → Setujui → **Status: Aktif**
-
-Ulangi untuk **Sari Dewi** dan **Ahmad Fauzi** dengan data yang sama (kecuali nama karyawan).
+Buat untuk: Budi Santoso, Sari Dewi, Ahmad Fauzi → masing-masing Konfirmasi → Setujui → **Aktif**
 
 ---
 
-#### 2.2 — Perjanjian Gaji Budi Santoso
+**3.2 — Perjanjian Gaji Karyawan**
 
-**Perjanjian — Budi Santoso**
+Buat perjanjian gaji untuk setiap karyawan (ini adalah perjanjian vendor ↔ karyawan):
 
-| Field | Nilai |
-|---|---|
-| Tipe Perjanjian | `Perjanjian Outsource Operator` |
-| Karyawan | `Budi Santoso` |
-| Tanggal | `01/01/2025` |
-| Struktur Gaji | `Gaji Operator Produksi` |
-
-**Input Perjanjian:**
+**Budi Santoso** — Tipe: `Perjanjian Outsource Operator` — Struktur: `Gaji Operator Produksi`
 
 | Input | Nilai |
 |---|---|
@@ -107,18 +125,16 @@ Ulangi untuk **Sari Dewi** dan **Ahmad Fauzi** dengan data yang sama (kecuali na
 | Tunjangan Transportasi | Rp 500.000 |
 | Tunjangan Makan | Rp 300.000 |
 
-Proses: Konfirmasi → Setujui → Aktifkan → **Status: Aktif**  
-Nomor digenerate: `PA-OP/2025/01/0001`
+Nomor: `PA-OP/2025/01/0001` → **Aktif**
 
-**Ulangi untuk Sari Dewi** (Gaji Pokok: Rp 3.800.000) → Nomor: `PA-OP/2025/01/0002`
-
-**Ulangi untuk Ahmad Fauzi** (Gaji Pokok: Rp 4.200.000) → Nomor: `PA-OP/2025/01/0003`
+Ulangi untuk **Sari Dewi** (GP: Rp 3.800.000) → `PA-OP/2025/01/0002`  
+Ulangi untuk **Ahmad Fauzi** (GP: Rp 4.200.000) → `PA-OP/2025/01/0003`
 
 ---
 
-### Tahap 3: Pemrosesan Gaji Januari 2025
+### Tahap 4: Proses Gaji Januari 2025
 
-#### 3.1 — Buat Batch Gaji
+**4.1 — Buat Batch Slip Gaji**
 
 | Field | Nilai |
 |---|---|
@@ -127,98 +143,85 @@ Nomor digenerate: `PA-OP/2025/01/0001`
 | Periode | `01/01/2025 – 31/01/2025` |
 | Karyawan | Budi Santoso, Sari Dewi, Ahmad Fauzi |
 
-Klik **Buka Batch** → 3 slip gaji tergenerate otomatis.
+**Buka Batch** → 3 slip gaji tergenerate otomatis.
 
-#### 3.2 — Verifikasi Slip Gaji
+**4.2 — Verifikasi Slip Gaji Budi Santoso**
 
-Cek slip gaji Budi Santoso:
-
-| Komponen | Nilai Terhitung | Status |
+| Komponen | Nilai | Status |
 |---|---|---|
-| Gaji Pokok | Rp 4.000.000 | ✓ Benar |
-| Tunjangan Transportasi | Rp 500.000 | ✓ Benar |
-| Tunjangan Makan | Rp 300.000 | ✓ Benar |
-| BPJS Kesehatan Karyawan | Rp 48.000 | ✓ Benar (1% × 4jt) |
-| BPJS TK JHT Karyawan | Rp 96.000 | ✓ Benar (2% × 4jt) |
-| **Gaji Bersih** | **Rp 4.656.000** | ✓ Benar |
+| Gaji Pokok | Rp 4.000.000 | ✓ |
+| Tunjangan Transportasi | Rp 500.000 | ✓ |
+| Tunjangan Makan | Rp 300.000 | ✓ |
+| BPJS Kes. Karyawan | −Rp 48.000 | ✓ |
+| BPJS TK JHT Karyawan | −Rp 96.000 | ✓ |
+| **Gaji Bersih** | **Rp 4.656.000** | ✓ |
 
-#### 3.3 — Konfirmasi dan Setujui Batch
-
-Klik **Konfirmasi Batch** → Manajer mereview → Klik **Setujui**
-
-Hasil:
-- 3 slip gaji berstatus **Selesai**
-- Jurnal akuntansi biaya gaji terbuat otomatis
+**4.3 — Konfirmasi dan Setujui Batch**  
+Klik **Konfirmasi Batch** → Manajer **Setujui** → 3 slip gaji berstatus **Selesai**, jurnal akuntansi terbuat.
 
 ---
 
-### Tahap 4: Invoice ke PT. Karya Utama
+### Tahap 5: Invoicing ke PT. Karya Utama
 
-#### 4.1 — Rekap Biaya Gaji
+**5.1 — Buat Termin Pembayaran**
 
-| Karyawan | Total Gross | BPJS Perusahaan | Total Beban |
-|---|---|---|---|
-| Budi Santoso | Rp 4.800.000 | Rp 388.000 | Rp 5.188.000 |
-| Sari Dewi | Rp 4.600.000 | Rp 370.000 | Rp 4.970.000 |
-| Ahmad Fauzi | Rp 5.000.000 | Rp 407.000 | Rp 5.407.000 |
-| **Total** | **Rp 14.400.000** | **Rp 1.165.000** | **Rp 15.565.000** |
-
-#### 4.2 — Perhitungan Nilai Invoice
-
-| Item | Nilai |
-|---|---|
-| Total Beban Gaji | Rp 15.565.000 |
-| Biaya Administrasi (5%) | Rp 778.250 |
-| Margin (10%) | Rp 1.556.500 |
-| **Subtotal** | **Rp 17.899.750** |
-| PPN 11% | Rp 1.968.973 |
-| **Total Invoice** | **Rp 19.868.723** |
-
-#### 4.3 — Buat Invoice di Odoo
-
-**Invoice:**
+Dari Perjanjian `EEAA/2025/000001`, klik **Tambah Termin Pembayaran**:
 
 | Field | Nilai |
 |---|---|
-| Pelanggan | `PT. Karya Utama` |
-| Tanggal | `31/01/2025` |
-| Jatuh Tempo | `28/02/2025` |
+| Perjanjian | `EEAA/2025/000001 — PT. Karya Utama` |
+| Tanggal Mulai | `01/01/2025` |
+| Tanggal Selesai | `31/01/2025` |
 
-**Baris Invoice:**
+**5.2 — Load Data**
 
-| Deskripsi | Qty | Harga | Total |
-|---|---|---|---|
-| Jasa TK Outsource Operator - Budi Santoso - Jan 2025 | 1 | Rp 5.966.583 | Rp 5.966.583 |
-| Jasa TK Outsource Operator - Sari Dewi - Jan 2025 | 1 | Rp 5.720.833 | Rp 5.720.833 |
-| Jasa TK Outsource Operator - Ahmad Fauzi - Jan 2025 | 1 | Rp 6.212.333 | Rp 6.212.333 |
-| **Subtotal** | | | **Rp 17.899.750** |
+1. **Load Penugasan** → 3 karyawan ditemukan
+2. **Load Slip Gaji** → 3 slip gaji selesai ditemukan
+3. **Load Baris Slip Gaji** → komponen gaji teragregasi per rule
 
-Klik **Konfirmasi** → Kirim ke PT. Karya Utama.
+**5.3 — Aturan Pembayaran yang Terbentuk (Preview)**
+
+| Komponen | Total 3 Karyawan | Produk Invoice |
+|---|---|---|
+| Gaji Pokok | Rp 12.000.000 | Biaya Gaji Pokok Outsource |
+| Tunjangan | Rp 2.400.000 | Biaya Tunjangan Outsource |
+| BPJS Kes. Perusahaan | Rp 484.000 | Biaya BPJS Outsource |
+| BPJS TK JHT Perusahaan | Rp 574.500 | Biaya BPJS Outsource |
+| **Subtotal** | **Rp 15.458.500** | |
+| **PPN 11%** | **Rp 1.700.435** | |
+| **Total Invoice** | **Rp 17.158.935** | |
+
+**5.4 — Konfirmasi Termin** → Manajer setujui → **Selesai**
+
+**5.5 — Buat Invoice Otomatis**  
+Klik **Buat Invoice** → Invoice `INV/2025/01/0001` kepada **PT. Karya Utama** terbuat otomatis.
+
+**5.6 — Review, Kirim, Catat Pembayaran**  
+Invoice dikonfirmasi → dikirim ke PT. Karya Utama → saat dibayar, catat pembayaran di Odoo.
 
 ---
 
-## Ringkasan Timeline Skenario Ini
+## Ringkasan Timeline
 
 ```mermaid
 gantt
     title Implementasi Skenario Dasar — Januari 2025
     dateFormat  YYYY-MM-DD
     section Konfigurasi (Sekali)
-    Setup Struktur Gaji       :done, 2024-12-15, 3d
-    Setup Tipe Penugasan      :done, 2024-12-18, 1d
-    Setup Tipe Perjanjian     :done, 2024-12-18, 1d
+    Setup Struktur Gaji           :done, 2024-12-15, 3d
+    Perjanjian Outsource Klien    :done, 2024-12-18, 2d
     section Onboarding Karyawan
-    Penugasan 3 Karyawan      :done, 2025-01-01, 2d
-    Perjanjian Gaji 3 Karyawan:done, 2025-01-02, 2d
+    Penugasan 3 Karyawan          :done, 2025-01-01, 2d
+    Perjanjian Gaji 3 Karyawan    :done, 2025-01-02, 2d
     section Penggajian Januari
-    Buat & Verifikasi Batch   :2025-01-28, 2d
-    Persetujuan Batch         :2025-01-30, 1d
-    section Invoicing
-    Rekap & Buat Invoice      :2025-01-31, 1d
-    Kirim Invoice ke Klien    :2025-01-31, 1d
+    Buat & Verifikasi Batch       :2025-01-28, 2d
+    Persetujuan Batch             :2025-01-30, 1d
+    section Invoicing Otomatis
+    Buat Termin & Load Data       :2025-01-31, 1d
+    Buat Invoice Otomatis         :2025-01-31, 1d
 ```
 
 ---
 
 !!! success "Skenario Berhasil"
-    Dengan 3 karyawan di 1 klien, seluruh proses dari onboarding hingga invoice membutuhkan sekitar **1–2 minggu** untuk konfigurasi awal, dan sekitar **3–5 hari kerja** untuk siklus penggajian bulanan berikutnya.
+    Dengan 3 karyawan di 1 klien, siklus penggajian bulanan setelah setup awal hanya membutuhkan **2–3 hari kerja**: proses batch gaji → load termin pembayaran → buat invoice otomatis → kirim ke klien.

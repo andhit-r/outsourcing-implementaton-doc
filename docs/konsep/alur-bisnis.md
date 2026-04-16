@@ -5,163 +5,145 @@ description: Gambaran lengkap alur bisnis penggajian outsource dari awal hingga 
 
 # Alur Bisnis End-to-End
 
-Halaman ini menggambarkan keseluruhan alur bisnis pengelolaan penggajian karyawan outsource, mulai dari karyawan pertama kali bergabung hingga klien membayar tagihan.
+Halaman ini menggambarkan keseluruhan alur bisnis pengelolaan penggajian karyawan outsource, mulai dari negosiasi kontrak dengan klien hingga klien membayar tagihan.
 
 ---
 
 ## Gambaran Besar
 
-Alur bisnis dibagi menjadi tiga fase utama:
+Alur bisnis dibagi menjadi empat fase utama:
 
 ```mermaid
 flowchart LR
-    subgraph F1["Fase 1: Onboarding Karyawan"]
+    subgraph F1["Fase 1: Setup Kontrak Klien"]
         direction TB
-        A1["Daftarkan Karyawan"] --> A2["Tugaskan ke Klien"]
-        A2 --> A3["Buat Perjanjian Gaji"]
-        A3 --> A4["Setujui Perjanjian"]
+        A1["Buat Perjanjian\nOutsource"] --> A2["Definisikan Posisi\n& Kompensasi"]
+        A2 --> A3["Setujui Perjanjian\nOutsource"]
     end
-    subgraph F2["Fase 2: Penggajian Bulanan"]
+    subgraph F2["Fase 2: Onboarding Karyawan"]
         direction TB
-        B1["Buat Slip Gaji"] --> B2["Hitung Komponen Gaji"]
-        B2 --> B3["Setujui Slip Gaji"]
-        B3 --> B4["Konfirmasi & Catat Akuntansi"]
+        B1["Tugaskan Karyawan\nke Klien"] --> B2["Hubungkan ke\nPerjanjian Outsource"]
+        B2 --> B3["Buat & Setujui\nPerjanjian Gaji"]
     end
-    subgraph F3["Fase 3: Penagihan Klien"]
+    subgraph F3["Fase 3: Penggajian Bulanan"]
         direction TB
-        C1["Rekap Data Penggajian"] --> C2["Buat Invoice ke Klien"]
-        C2 --> C3["Kirim Invoice"]
-        C3 --> C4["Terima Pembayaran"]
+        C1["Buat Batch Slip Gaji"] --> C2["Verifikasi &\nSetujui Slip Gaji"]
+    end
+    subgraph F4["Fase 4: Invoicing Otomatis"]
+        direction TB
+        D1["Buat Termin\nPembayaran"] --> D2["Load Penugasan\n& Slip Gaji"]
+        D2 --> D3["Buat Invoice\nOtomatis"]
+        D3 --> D4["Terima\nPembayaran"]
     end
 
     F1 --> F2
     F2 --> F3
+    F3 --> F4
 ```
 
 ---
 
-## Fase 1: Onboarding Karyawan
+## Fase 1: Setup Kontrak dengan Klien
 
-### Langkah 1.1 — Daftarkan Karyawan
+Sebelum menempatkan karyawan, vendor dan klien menyepakati **kontrak outsourcing** secara resmi di sistem. Dokumen ini juga menjadi dasar pembuatan invoice kelak.
 
-Setiap karyawan harus terdaftar sebagai **karyawan (employee)** di Odoo sebelum bisa diproses penggajiannya.
+### Langkah 1.1 — Buat Perjanjian Outsource
 
-**Siapa yang melakukan:** Tim HR / Admin  
-**Menu di Odoo:** `Pegawai > Pegawai`
+**Menu di Odoo:** `Human Resources > External Assignment > Agreements`
 
-Data yang wajib diisi:
-- Nama lengkap
-- Nomor identitas (KTP)
-- Data kepegawaian (jabatan, departemen)
+Dokumen **Perjanjian Outsource** (`employee_external_assignment_agreement`) adalah kontrak antara vendor dengan klien. Isinya mencakup:
 
----
-
-### Langkah 1.2 — Tugaskan Karyawan ke Klien
-
-Setelah karyawan terdaftar, buat dokumen **Penugasan Eksternal** untuk mencatat ke klien mana karyawan ini ditempatkan.
-
-**Menu di Odoo:** `Pegawai > Penugasan Eksternal`
+- Klien dan lokasi kerja
+- Posisi pekerjaan yang disediakan beserta kuota jumlah karyawan
+- Rentang kompensasi per komponen gaji untuk setiap posisi
+- Konfigurasi jurnal dan akun akuntansi untuk penagihan
 
 !!! example "Contoh"
-    **Budi Santoso** baru bergabung sebagai karyawan PT. Maju Bersama dan akan ditempatkan di **PT. Karya Utama** sebagai operator produksi mulai **1 Januari 2025**.
+    **PT. Maju Bersama** membuat perjanjian dengan **PT. Karya Utama**:
 
-    - Tipe Penugasan: `Operasional - Klien Industri`
-    - Karyawan: `Budi Santoso`
+    - Tipe Perjanjian: `Outsourcing Operator Produksi`
     - Klien: `PT. Karya Utama`
-    - Tanggal Mulai: `01/01/2025`
+    - Posisi: Operator Produksi — kuota 5 orang, Gaji Pokok min Rp 4.000.000
 
-Setelah penugasan disetujui, status berubah menjadi **Open (Aktif)**.
-
----
-
-### Langkah 1.3 — Buat Perjanjian Gaji
-
-Buat dokumen **Perjanjian Penggajian** yang mendefinisikan skema gaji karyawan tersebut.
-
-**Menu di Odoo:** `Penggajian > Perjanjian Penggajian`
-
-!!! example "Contoh"
-    Untuk **Budi Santoso** yang telah ditugaskan ke PT. Karya Utama:
-
-    - Tipe Perjanjian: `Perjanjian Kerja Outsource Standar`
-    - Karyawan: `Budi Santoso`
-    - Struktur Gaji: `Gaji Operator Produksi`
-    - Input Khusus: Tunjangan Transportasi = Rp 500.000
-
----
-
-### Langkah 1.4 — Setujui Perjanjian Gaji
-
-Perjanjian gaji melewati alur persetujuan:
+### Langkah 1.2 — Setujui Perjanjian Outsource
 
 ```mermaid
 stateDiagram-v2
     [*] --> Draft: Perjanjian dibuat
     Draft --> Konfirmasi: Dikirim untuk review
-    Konfirmasi --> Siap: Disetujui
-    Siap --> Aktif: Diberlakukan
-    Aktif --> Selesai: Karyawan keluar / ganti perjanjian
+    Konfirmasi --> Aktif: Disetujui
+    Aktif --> Selesai: Kontrak berakhir
     Konfirmasi --> Ditolak: Perlu perbaikan
-    Ditolak --> Draft: Dikembalikan
+    Ditolak --> Draft: Diperbaiki
+    Aktif --> Dihentikan: Dihentikan lebih awal
 ```
 
-Setelah status **Aktif (Open)**, sistem secara otomatis menetapkan perjanjian ini sebagai dasar perhitungan gaji karyawan.
+Setelah **Aktif (Open)**, perjanjian siap digunakan sebagai payung bagi penugasan karyawan.
 
 ---
 
-## Fase 2: Penggajian Bulanan
+## Fase 2: Onboarding Karyawan
+
+### Langkah 2.1 — Tugaskan Karyawan ke Klien
+
+**Menu di Odoo:** `Human Resources > External Assignment > Assignments`
+
+Saat membuat penugasan, hubungkan ke **Perjanjian Outsource** yang sudah aktif dengan klien tersebut.
+
+!!! example "Contoh"
+    **Budi Santoso** ditempatkan di **PT. Karya Utama** mulai 1 Januari 2025:
+
+    - Tipe Penugasan: `Penugasan Operator - Klien Industri`
+    - Karyawan: `Budi Santoso`
+    - Klien: `PT. Karya Utama`
+    - **Perjanjian Outsource:** `EEAA/2025/000001`
+    - Tanggal Mulai: `01/01/2025`
+
+Setelah disetujui, status berubah menjadi **Aktif (Open)**.
+
+---
+
+### Langkah 2.2 — Buat Perjanjian Gaji Karyawan
+
+**Menu di Odoo:** `Penggajian > Perjanjian Penggajian`
+
+Ini adalah kesepakatan gaji antara vendor dan **karyawan** (bukan klien).
+
+!!! warning "Dua Jenis Perjanjian yang Berbeda"
+    | Jenis | Antara | Tujuan |
+    |---|---|---|
+    | **Perjanjian Outsource** | Vendor ↔ Klien | Dasar kontrak & penagihan ke klien |
+    | **Perjanjian Gaji** | Vendor ↔ Karyawan | Dasar perhitungan gaji karyawan |
+
+!!! example "Contoh"
+    Untuk **Budi Santoso**:
+
+    - Tipe Perjanjian: `Perjanjian Kerja Outsource Standar`
+    - Karyawan: `Budi Santoso`
+    - Struktur Gaji: `Gaji Operator Produksi`
+    - Input: Gaji Pokok = Rp 4.000.000, Tunjangan Transportasi = Rp 500.000
+
+Setelah disetujui dan **Aktif**, perjanjian ini menjadi dasar perhitungan gaji tiap bulan.
+
+---
+
+## Fase 3: Penggajian Bulanan
 
 Setiap bulan, proses penggajian dilakukan untuk semua karyawan yang aktif.
 
-### Langkah 2.1 — Buat Slip Gaji
+### Langkah 3.1 — Buat Batch Slip Gaji
 
-Ada dua cara membuat slip gaji:
+**Menu:** `Penggajian > Batch Slip Gaji`
 
-=== "Individual (satu per satu)"
+Rekomendasinya: buat **satu batch per klien** agar data lebih terkelompok saat invoicing.
 
-    **Menu:** `Penggajian > Slip Gaji`
+!!! example "Contoh"
+    - `Gaji Januari 2025 - PT. Karya Utama` → Budi Santoso, Sari Dewi, Ahmad Fauzi
+    - `Gaji Januari 2025 - PT. Nusantara Jaya` → karyawan di klien tersebut
 
-    Cocok untuk perusahaan dengan sedikit karyawan atau koreksi individual.
-    
-    !!! example "Contoh"
-        Buat slip gaji untuk **Budi Santoso** periode **Januari 2025**:
-        
-        - Tipe Slip Gaji: `Slip Gaji Bulanan`
-        - Karyawan: `Budi Santoso`
-        - Periode: `01/01/2025 – 31/01/2025`
-        - Tanggal Akuntansi: `31/01/2025`
+### Langkah 3.2 — Setujui Slip Gaji
 
-=== "Batch (massal)"
-
-    **Menu:** `Penggajian > Batch Slip Gaji`
-
-    Cocok untuk perusahaan dengan banyak karyawan. Satu batch bisa memproses puluhan karyawan sekaligus.
-    
-    !!! example "Contoh"
-        Buat batch gaji untuk **bulan Januari 2025**:
-        
-        - Nama Batch: `Gaji Januari 2025`
-        - Tipe Slip Gaji: `Slip Gaji Bulanan`
-        - Periode: `01/01/2025 – 31/01/2025`
-        - Karyawan: pilih semua karyawan aktif
-
----
-
-### Langkah 2.2 — Verifikasi Komponen Gaji
-
-Setelah slip gaji dibuat, sistem secara otomatis menghitung komponen gaji berdasarkan:
-
-- **Struktur gaji** yang terdefinisi di perjanjian karyawan
-- **Komponen gaji (rules)** yang aktif dalam struktur tersebut
-- **Input khusus** yang sudah dikonfigurasi di perjanjian gaji
-
-Implementor perlu memverifikasi bahwa semua komponen terhitung dengan benar sebelum meneruskan ke persetujuan.
-
----
-
-### Langkah 2.3 — Setujui dan Konfirmasi Slip Gaji
-
-Slip gaji melewati alur berikut:
+Setelah batch disetujui, semua slip gaji berstatus **Selesai (Done)** dan jurnal akuntansi biaya gaji terbuat otomatis.
 
 ```mermaid
 stateDiagram-v2
@@ -170,62 +152,51 @@ stateDiagram-v2
     Konfirmasi --> Selesai: Disetujui & dikonfirmasi
     Selesai --> [*]: Entri akuntansi terbuat
     Konfirmasi --> Ditolak: Perlu perbaikan
-    Ditolak --> Draft: Dikembalikan ke draft
+    Ditolak --> Draft: Dikembalikan
 ```
 
-Ketika status berubah menjadi **Selesai (Done)**, sistem otomatis membuat **jurnal akuntansi** untuk biaya gaji.
-
 ---
 
-## Fase 3: Penagihan Klien
+## Fase 4: Invoicing Otomatis ke Klien
 
-Setelah penggajian selesai, vendor perlu menagih klien sesuai biaya tenaga kerja yang telah dikeluarkan.
+Proses invoicing **tidak dilakukan manual**. Sistem membaca data slip gaji yang sudah selesai dan menghasilkan invoice secara otomatis melalui **Termin Pembayaran (Payment Term)**.
 
-### Langkah 3.1 — Rekap Penggajian per Klien
+### Langkah 4.1 — Buat Termin Pembayaran
 
-Sebelum membuat invoice, rekap data gaji karyawan berdasarkan penugasan:
+**Menu:** `Human Resources > External Assignment > Payment Terms`
 
-- Karyawan mana yang bekerja di klien tertentu bulan ini
-- Berapa total biaya gaji per karyawan
-- Apakah ada biaya tambahan (lembur, tunjangan khusus, dll.)
+Atau dari form Perjanjian Outsource, klik **Tambah Payment Term**.
 
-!!! example "Contoh Rekap Januari 2025 — PT. Karya Utama"
+| Field | Nilai |
+|---|---|
+| Perjanjian Outsource | Pilih perjanjian yang berlaku dengan klien |
+| Tanggal Mulai Periode | `01/01/2025` |
+| Tanggal Selesai Periode | `31/01/2025` |
 
-    | Karyawan | Gaji Pokok | Tunjangan | Total Gaji |
-    |---|---|---|---|
-    | Budi Santoso | Rp 4.000.000 | Rp 500.000 | Rp 4.500.000 |
-    | Sari Dewi | Rp 3.800.000 | Rp 400.000 | Rp 4.200.000 |
-    | **Total** | **Rp 7.800.000** | **Rp 900.000** | **Rp 8.700.000** |
+### Langkah 4.2 — Load Data Secara Otomatis
 
----
+Klik tombol secara berurutan di form Termin Pembayaran:
 
-### Langkah 3.2 — Buat Invoice ke Klien
+1. **Load Penugasan** — menemukan semua karyawan aktif di klien ini selama periode
+2. **Load Slip Gaji** — membaca slip gaji semua karyawan yang ditemukan
+3. **Load Baris Slip Gaji** — memuat komponen gaji per aturan, siap ditagihkan
 
-**Menu di Odoo:** `Akuntansi > Pelanggan > Invoice`
+### Langkah 4.3 — Buat Invoice Otomatis
 
-Invoice dibuat secara manual dengan mengacu pada data penggajian yang sudah diproses.
+Klik **Buat Invoice**. Sistem otomatis membuat invoice kepada klien berdasarkan data slip gaji yang dimuat — dengan baris invoice per komponen gaji.
 
-!!! example "Contoh Invoice ke PT. Karya Utama"
+!!! example "Contoh Invoice yang Dihasilkan"
+    | Baris Invoice | Nilai |
+    |---|---|
+    | Biaya Gaji Pokok — Januari 2025 | Rp 12.000.000 |
+    | Biaya Tunjangan — Januari 2025 | Rp 3.900.000 |
+    | Iuran BPJS Perusahaan — Januari 2025 | Rp 1.165.000 |
 
-    **Invoice No.:** INV/2025/01/0001  
-    **Tanggal:** 31 Januari 2025  
-    **Pelanggan:** PT. Karya Utama  
+### Langkah 4.4 — Kirim Invoice dan Terima Pembayaran
 
-    | Deskripsi | Qty | Harga | Subtotal |
-    |---|---|---|---|
-    | Jasa Tenaga Kerja Outsource – Januari 2025 | 2 orang | Rp 4.750.000 | Rp 9.500.000 |
-
-    > *Catatan: Harga per orang = Total gaji + Margin vendor*
-
----
-
-### Langkah 3.3 — Kirim Invoice dan Terima Pembayaran
-
-Setelah invoice dikonfirmasi di Odoo:
-
-1. Kirim invoice ke klien (email atau cetak)
-2. Pantau status pembayaran di menu Akuntansi
-3. Rekam pembayaran ketika klien melunasi tagihan
+1. Klik **Lihat Invoice** dari termin pembayaran
+2. Konfirmasi, kirim ke klien
+3. Catat pembayaran saat klien melunasi
 
 ---
 
@@ -233,20 +204,23 @@ Setelah invoice dikonfirmasi di Odoo:
 
 ```mermaid
 gantt
-    title Timeline Penggajian Bulanan
+    title Siklus Penggajian & Invoicing Bulanan
     dateFormat  DD-MM
     section Penggajian
     Buat Batch Slip Gaji       :a1, 25-01, 2d
     Verifikasi Komponen Gaji   :a2, after a1, 2d
-    Proses Persetujuan         :a3, after a2, 2d
-    Konfirmasi & Pencatatan    :a4, after a3, 1d
-    section Invoicing
-    Rekap per Klien            :b1, after a4, 1d
-    Buat Invoice               :b2, after b1, 1d
-    Kirim Invoice ke Klien     :b3, after b2, 1d
+    Persetujuan Batch          :a3, after a2, 1d
+    section Invoicing Otomatis
+    Buat Termin Pembayaran     :b1, after a3, 1d
+    Load Penugasan & Slip Gaji :b2, after b1, 1d
+    Konfirmasi & Buat Invoice  :b3, after b2, 1d
+    Kirim Invoice ke Klien     :b4, after b3, 1d
 ```
 
 ---
 
 !!! warning "Penting: Urutan yang Benar"
-    Pastikan Perjanjian Gaji karyawan sudah dalam status **Aktif (Open)** sebelum membuat slip gaji. Jika perjanjian belum aktif, sistem tidak akan bisa menentukan struktur gaji yang digunakan.
+    Invoice hanya bisa dibuat jika semua slip gaji karyawan yang bersangkutan sudah dalam status **Selesai (Done)**. Pastikan batch penggajian selesai lebih dahulu sebelum membuat termin pembayaran.
+
+
+---

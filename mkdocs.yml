@@ -67,11 +67,12 @@ nav:
     - Tipe Penugasan Karyawan: konfigurasi/tipe-penugasan.md
     - Tipe Perjanjian Gaji: konfigurasi/tipe-perjanjian.md
   - Operasional:
+    - Perjanjian Outsource Vendor-Klien: operasional/perjanjian-klien.md
     - Penugasan Karyawan ke Klien: operasional/penugasan-karyawan.md
     - Perjanjian Gaji Karyawan: operasional/perjanjian-gaji.md
     - Pemrosesan Slip Gaji: operasional/pemrosesan-gaji.md
     - Batch Pemrosesan Gaji Massal: operasional/batch-gaji.md
-    - Invoicing ke Klien: operasional/invoicing-klien.md
+    - Invoicing ke Klien (Termin Pembayaran): operasional/invoicing-klien.md
   - Contoh Kasus:
     - Skenario Dasar: contoh-kasus/skenario-dasar.md
     - Skenario Lanjutan: contoh-kasus/skenario-lanjutan.md

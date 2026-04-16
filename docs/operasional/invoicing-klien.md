@@ -1,172 +1,235 @@
 ---
-title: Invoicing ke Klien
-description: Panduan membuat invoice penagihan biaya tenaga kerja kepada klien berdasarkan data penggajian
+title: Invoicing ke Klien (Termin Pembayaran)
+description: Panduan menggunakan Termin Pembayaran untuk membuat invoice otomatis ke klien berdasarkan data penggajian
 ---
 
 # Invoicing ke Klien
 
-Setelah penggajian karyawan selesai diproses, langkah berikutnya adalah **menagih klien** sesuai biaya tenaga kerja yang telah dikeluarkan vendor. Proses invoicing dibuat secara manual di modul Akuntansi Odoo.
+Invoice kepada klien dibuat secara **otomatis** oleh sistem berdasarkan data slip gaji karyawan yang sudah diproses. Mekanisme ini bekerja melalui dokumen **Termin Pembayaran (Payment Term)** yang menjadi bagian dari Perjanjian Outsource.
 
 ---
 
-## Konsep Billing Outsourcing
+## Konsep: Termin Pembayaran
 
-Dalam model bisnis outsourcing, vendor (PT. Maju Bersama) menagih klien berdasarkan:
+**Termin Pembayaran** adalah dokumen billing period — satu dokumen per klien per periode. Dokumen ini:
 
+1. Membaca daftar karyawan yang aktif di klien selama periode tersebut
+2. Mengambil slip gaji masing-masing karyawan
+3. Mengagregasi nilai per komponen gaji
+4. Menghasilkan invoice kepada klien secara otomatis
+
+```mermaid
+flowchart LR
+    PA["Perjanjian Outsource\n(Vendor ↔ Klien)"]
+    PT["Termin Pembayaran\n(Billing Period)"]
+    AS["Penugasan Karyawan\n(yang aktif di periode ini)"]
+    PS["Slip Gaji\n(yg sudah Selesai/Done)"]
+    RL["Aturan Pembayaran\n(agregasi per komponen)"]
+    IV["Invoice ke Klien\n(account.move)"]
+
+    PA -->|"memiliki"| PT
+    PT -->|"load"| AS
+    AS -->|"terhubung ke"| PS
+    PS -->|"dirangkum menjadi"| RL
+    RL -->|"menghasilkan"| IV
 ```
-Nilai Invoice ke Klien = Total Gaji Karyawan + Biaya Overhead + Margin Keuntungan
+
+---
+
+## Prasyarat
+
+Sebelum membuat termin pembayaran, pastikan:
+
+- [ ] **Perjanjian Outsource** dengan klien sudah dalam status **Aktif**
+- [ ] Jurnal invoice dan akun piutang sudah dikonfigurasi di perjanjian
+- [ ] Semua **slip gaji** karyawan di klien tersebut sudah dalam status **Selesai (Done)**
+- [ ] Karyawan yang bersangkutan memiliki **penugasan aktif** yang terhubung ke perjanjian outsource
+
+---
+
+## Alur Termin Pembayaran
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft: Termin dibuat
+    Draft --> Konfirmasi: Dikirim untuk review
+    Konfirmasi --> Selesai: Disetujui — invoice bisa dibuat
+    Selesai --> [*]: Invoice terbuat & dikirim
+    Konfirmasi --> Ditolak: Perlu perbaikan
+    Ditolak --> Draft: Dikembalikan
 ```
 
-Struktur tagihan yang umum digunakan:
+---
 
-| Komponen Tagihan | Keterangan |
+## Langkah-Langkah Membuat Invoice
+
+### Langkah 1 — Buat Termin Pembayaran
+
+**Cara 1:** Dari menu utama  
+`Human Resources > External Assignment > Payment Terms > Baru`
+
+**Cara 2:** Dari form Perjanjian Outsource  
+Buka perjanjian yang bersangkutan → Tab **Termin Pembayaran** → klik **Tambah**
+
+| Field | Cara Mengisi |
 |---|---|
-| **Biaya Gaji Kotor** | Total penghasilan karyawan (sebelum potongan BPJS, dll.) |
-| **Biaya BPJS Perusahaan** | BPJS yang ditanggung vendor sebagai pemberi kerja |
-| **Biaya Administrasi** | Biaya pengelolaan dan administrasi SDM |
-| **Margin Keuntungan** | Keuntungan vendor dari jasa penempatan |
+| **Perjanjian** | Pilih perjanjian outsource dengan klien |
+| **Tanggal Mulai Periode** | Awal periode yang akan ditagihkan |
+| **Tanggal Selesai Periode** | Akhir periode |
 
-!!! note "Kebijakan Billing Berbeda-beda"
-    Setiap vendor bisa memiliki kebijakan billing yang berbeda. Halaman ini hanya memberikan panduan umum — sesuaikan dengan kebijakan bisnis perusahaan Anda dan perjanjian dengan klien.
-
----
-
-## Persiapan Sebelum Membuat Invoice
-
-### 1. Rekap Karyawan per Klien
-
-Sebelum membuat invoice, rekap terlebih dahulu:
-
-**Langkah:** Buka `Pegawai > Penugasan Karyawan Eksternal`, filter dengan:
-- **Status:** Aktif (Open)
-- **Klien:** Pilih klien yang akan ditagih
-
-Catat daftar karyawan yang aktif di klien tersebut selama periode yang ditagihkan.
-
-!!! example "Rekap Karyawan Aktif — PT. Karya Utama — Januari 2025"
-
-    | Karyawan | Posisi | Tanggal Mulai Penugasan | Status |
-    |---|---|---|---|
-    | Budi Santoso | Operator Produksi | 01/01/2025 | Aktif |
-    | Sari Dewi | Operator Produksi | 15/11/2024 | Aktif |
+!!! example "Contoh Pengisian"
+    | Field | Nilai |
+    |---|---|
+    | Perjanjian | `EEAA/2025/000001 — PT. Karya Utama` |
+    | Tanggal Mulai Periode | `01/01/2025` |
+    | Tanggal Selesai Periode | `31/01/2025` |
 
 ---
 
-### 2. Rekap Biaya Gaji per Klien
+### Langkah 2 — Load Penugasan Aktif
 
-Dari slip gaji yang sudah selesai, rekap total biaya untuk karyawan di klien tersebut.
+Klik tombol **Load Penugasan** (Load External Assignments).
 
-!!! example "Rekap Biaya Gaji — Karyawan di PT. Karya Utama — Januari 2025"
+Sistem akan menelusuri semua penugasan karyawan yang:
+- Terhubung ke perjanjian outsource yang dipilih
+- Aktif selama rentang periode yang ditentukan
 
-    | Karyawan | Gaji Pokok | Tunjangan | Total Gross | BPJS Perusahaan | Total Beban Vendor |
-    |---|---|---|---|---|---|
-    | Budi Santoso | Rp 4.000.000 | Rp 800.000 | Rp 4.800.000 | Rp 390.000 | Rp 5.190.000 |
-    | Sari Dewi | Rp 3.800.000 | Rp 700.000 | Rp 4.500.000 | Rp 370.000 | Rp 4.870.000 |
-    | **Total** | **Rp 7.800.000** | **Rp 1.500.000** | **Rp 9.300.000** | **Rp 760.000** | **Rp 10.060.000** |
-
----
-
-### 3. Tentukan Nilai Invoice
-
-Berdasarkan rekap biaya dan kebijakan billing, hitung nilai invoice:
-
-!!! example "Perhitungan Nilai Invoice ke PT. Karya Utama"
-
-    | Item | Perhitungan | Nilai |
+!!! example "Hasil Load Penugasan"
+    Tab **Penugasan** akan terisi dengan:
+    
+    | Karyawan | Perjanjian | Tanggal Mulai Penugasan |
     |---|---|---|
-    | Total Beban Gaji | Seperti rekap di atas | Rp 10.060.000 |
-    | Biaya Administrasi (5%) | 5% × Rp 10.060.000 | Rp 503.000 |
-    | Margin Vendor (10%) | 10% × Rp 10.060.000 | Rp 1.006.000 |
-    | **Total Invoice (sebelum PPN)** | | **Rp 11.569.000** |
-    | PPN 11% | | Rp 1.272.590 |
-    | **Total Invoice (termasuk PPN)** | | **Rp 12.841.590** |
+    | Budi Santoso | EEAA/2025/000001 | 01/01/2025 |
+    | Sari Dewi | EEAA/2025/000001 | 15/11/2024 |
+    | Ahmad Fauzi | EEAA/2025/000001 | 01/01/2025 |
 
 ---
 
-## Membuat Invoice di Odoo
+### Langkah 3 — Load Slip Gaji
 
-**Menu:** `Akuntansi > Pelanggan > Invoice > Baru`
+Klik tombol **Load Slip Gaji** (Reload Payslip).
 
-### Mengisi Form Invoice
+Sistem mencari slip gaji dari karyawan yang sudah di-load pada langkah sebelumnya, dengan kriteria:
+- Status slip gaji: **Selesai (Done)**
+- Periode slip gaji masuk dalam rentang periode termin pembayaran
 
-| Field | Nilai |
+!!! example "Hasil Load Slip Gaji"
+    Tab **Slip Gaji** akan terisi:
+    
+    | Slip Gaji | Karyawan | Periode | Status |
+    |---|---|---|---|
+    | PSL/2025/01/0001 | Budi Santoso | Jan 2025 | Selesai ✓ |
+    | PSL/2025/01/0002 | Sari Dewi | Jan 2025 | Selesai ✓ |
+    | PSL/2025/01/0003 | Ahmad Fauzi | Jan 2025 | Selesai ✓ |
+
+!!! warning "Slip Gaji Belum Selesai?"
+    Jika ada slip gaji yang belum berstatus **Selesai**, karyawan tersebut tidak akan masuk ke daftar. Selesaikan proses persetujuan slip gaji terlebih dahulu, lalu klik **Load Slip Gaji** lagi.
+
+---
+
+### Langkah 4 — Load Baris Slip Gaji
+
+Klik tombol **Load Baris Slip Gaji** (Reload Payslip Line).
+
+Sistem mengekstrak setiap komponen gaji (payslip line) dari semua slip gaji yang sudah di-load, lalu mengelompokkannya per **aturan/komponen gaji (salary rule)**.
+
+---
+
+### Langkah 5 — Verifikasi Aturan Pembayaran
+
+Di tab **Aturan Pembayaran (Rules)**, sistem menampilkan agregasi nilai per komponen gaji:
+
+!!! example "Contoh Aturan Pembayaran yang Terbentuk"
+    | Komponen | Total dari Semua Slip | Produk Invoice | Pajak |
+    |---|---|---|---|
+    | Gaji Pokok | Rp 12.000.000 | Biaya Gaji | PPN 11% |
+    | Tunjangan Transportasi | Rp 1.500.000 | Biaya Tunjangan | PPN 11% |
+    | Tunjangan Makan | Rp 900.000 | Biaya Tunjangan | PPN 11% |
+    | BPJS Kes. Perusahaan | Rp 484.000 | Biaya BPJS | PPN 11% |
+    | BPJS TK Perusahaan | Rp 574.500 | Biaya BPJS | PPN 11% |
+    | **Total Sebelum Pajak** | **Rp 15.458.500** | | |
+    | **PPN 11%** | **Rp 1.700.435** | | |
+    | **Total Invoice** | **Rp 17.158.935** | | |
+
+Di bagian footer form termin pembayaran, tampil ringkasan:
+- **Subtotal (sebelum pajak)**
+- **Pajak**
+- **Total Invoice**
+
+---
+
+### Langkah 6 — Konfirmasi Termin Pembayaran
+
+Setelah verifikasi selesai:
+
+1. Klik **Konfirmasi**
+2. Manajer yang berwenang menyetujui
+3. Status berubah ke **Selesai (Done)**
+
+---
+
+### Langkah 7 — Buat Invoice
+
+Klik tombol **Buat Invoice** (Create Invoice).
+
+Sistem otomatis membuat invoice (`account.move`) dengan:
+- **Pelanggan:** Klien dari perjanjian outsource
+- **Jurnal:** Dari konfigurasi perjanjian outsource
+- **Akun Piutang:** Dari konfigurasi perjanjian outsource
+- **Baris Invoice:** Satu baris per aturan pembayaran (per komponen gaji)
+- **Referensi:** Nomor perjanjian outsource
+
+---
+
+### Langkah 8 — Review dan Kirim Invoice
+
+1. Klik **Lihat Invoice** untuk membuka dokumen invoice yang baru terbuat
+2. Review semua baris dan total
+3. Klik **Konfirmasi** di halaman invoice (jika belum terkonfirmasi)
+4. Klik **Kirim & Cetak** untuk mengirim ke klien
+
+---
+
+## Memantau Status Invoice
+
+Di form Termin Pembayaran, Anda bisa melihat:
+- Apakah invoice sudah terbuat (ada link ke invoice)
+- Status invoice (Draft / Diposting / Lunas)
+
+**Opsi tambahan:**
+
+| Tombol | Fungsi |
 |---|---|
-| **Pelanggan** | Pilih klien (mis. `PT. Karya Utama`) |
-| **Tanggal Invoice** | Tanggal invoice diterbitkan |
-| **Tanggal Jatuh Tempo** | Sesuai perjanjian (mis. 30 hari setelah tanggal invoice) |
-
-**Di bagian Item Invoice**, tambahkan baris tagihan:
-
-!!! example "Contoh Baris Invoice"
-
-    | Produk/Deskripsi | Qty | Harga Satuan | Total |
-    |---|---|---|---|
-    | Jasa Tenaga Kerja Outsource - Operator Produksi - Januari 2025 | 2 | Rp 5.784.500 | Rp 11.569.000 |
-
-    Atau bisa juga dirinci per karyawan:
-
-    | Produk/Deskripsi | Qty | Harga Satuan | Total |
-    |---|---|---|---|
-    | Jasa TK Outsource - Budi Santoso - Jan 2025 | 1 | Rp 6.113.000 | Rp 6.113.000 |
-    | Jasa TK Outsource - Sari Dewi - Jan 2025 | 1 | Rp 5.456.000 | Rp 5.456.000 |
+| **Hapus Invoice** | Menghapus invoice dan memutus hubungannya |
+| **Putus Hubungan Invoice** | Melepas link ke invoice tanpa menghapus invoice-nya |
+| **Tandai Manual** | Menandai bahwa termin ini dikelola secara manual |
 
 ---
 
-### Konfirmasi Invoice
-
-1. Review semua baris invoice
-2. Klik **Konfirmasi** (Confirm)  
-3. Nomor invoice digenerate otomatis
-4. Status berubah ke **Diposting (Posted)**
-
----
-
-### Kirim Invoice ke Klien
-
-Setelah invoice dikonfirmasi:
-
-1. Klik **Kirim & Cetak** (Send & Print)
-2. Pilih cara pengiriman (email atau cetak PDF)
-3. Invoice terkirim ke klien
-
----
-
-## Memantau Status Pembayaran
-
-**Menu:** `Akuntansi > Pelanggan > Invoice`
-
-Filter berdasarkan:
-- **Pelanggan:** nama klien
-- **Status:** Dikirim (tidak terbayar)
-
-### Mencatat Pembayaran
+## Mencatat Pembayaran dari Klien
 
 Ketika klien membayar:
 
-1. Buka invoice yang sudah dibayar
+1. Buka invoice terkait
 2. Klik **Catat Pembayaran** (Register Payment)
 3. Pilih rekening bank penerima
 4. Masukkan tanggal dan referensi pembayaran
 5. Konfirmasi
 
-Invoice akan otomatis berubah ke status **Lunas (Paid)**.
+Invoice otomatis berubah ke status **Lunas (Paid)**.
 
 ---
 
-## Laporan dan Rekonsiliasi
-
-Untuk memastikan semua penagihan sudah terlaksana, lakukan rekonsiliasi bulanan:
+## Rekonsiliasi Akhir Bulan
 
 | Pengecekan | Cara |
 |---|---|
 | Semua batch gaji sudah selesai | `Penggajian > Batch Slip Gaji` → filter bulan ini |
-| Semua klien aktif sudah diinvoice | `Akuntansi > Invoice` → filter bulan ini → bandingkan dengan daftar klien aktif |
-| Tidak ada invoice yang belum dibayar lebih dari jatuh tempo | `Akuntansi > Pelanggan > Invoice` → filter "Jatuh Tempo" |
+| Semua klien aktif sudah ada termin pembayaran | `HR > External Assignment > Payment Terms` |
+| Semua termin sudah punya invoice | Filter termin tanpa invoice |
+| Tidak ada invoice jatuh tempo belum dibayar | `Akuntansi > Invoice` → filter "Jatuh Tempo" |
 
 ---
 
-!!! warning "Penting: Invoice Terpisah per Klien"
-    Buat invoice yang **terpisah** untuk setiap klien. Jangan menggabungkan tagihan ke beberapa klien dalam satu invoice.
-
-!!! tip "Lampiran Rekap Gaji"
-    Banyak klien meminta **lampiran rekap gaji** sebagai bukti pendukung invoice. Lampirkan rekap Excel atau laporan dari Odoo berisi nama karyawan dan rincian biaya saat mengirim invoice.
+!!! tip "Tips: Beberapa Biaya Tambahan?"
+    Jika ada biaya di luar komponen gaji (biaya rekrutmen, biaya seragam, dll.), Anda bisa menambahkannya langsung di invoice yang sudah terbuat, atau mengkonfigurasinya di tab **Biaya Lainnya** pada Perjanjian Outsource sebelum termin dibuat.

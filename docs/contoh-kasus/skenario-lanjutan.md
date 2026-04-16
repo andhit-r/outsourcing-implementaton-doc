@@ -24,57 +24,49 @@ Skenario ini menggambarkan implementasi yang lebih kompleks untuk **perusahaan o
 
 ## Distribusi Karyawan
 
-| Karyawan | Posisi | Ditempatkan di | Skema Gaji |
+| Karyawan | Posisi | Ditempatkan di | Perjanjian Outsource |
 |---|---|---|---|
-| Budi Santoso | Operator Produksi | PT. Karya Utama | Gaji Operator |
-| Sari Dewi | Operator Produksi | PT. Karya Utama | Gaji Operator |
-| Ahmad Fauzi | Operator Produksi | PT. Karya Utama | Gaji Operator |
-| Rina Puspita | Staf Administrasi | PT. Karya Utama | Gaji Staf Admin |
-| Doni Kurniawan | Staf Keuangan | PT. Nusantara Jaya | Gaji Staf Senior |
-| Maya Sari | Staf Administrasi | PT. Nusantara Jaya | Gaji Staf Admin |
-| Hendra Wijaya | Staf IT | PT. Nusantara Jaya | Gaji Staf Senior |
-| Tono Santoso | Satpam | CV. Berkah Abadi | Gaji Satpam |
-| Wati Rahayu | Satpam | CV. Berkah Abadi | Gaji Satpam |
-| Agus Priyono | Cleaning Service | CV. Berkah Abadi | Gaji CS |
-| Dewi Lestari | Cleaning Service | CV. Berkah Abadi | Gaji CS |
-| Fajar Nugroho | Supervisor | PT. Karya Utama | Gaji Supervisor |
+| Budi Santoso | Operator Produksi | PT. Karya Utama | EEAA/2025/000001 |
+| Sari Dewi | Operator Produksi | PT. Karya Utama | EEAA/2025/000001 |
+| Ahmad Fauzi | Operator Produksi | PT. Karya Utama | EEAA/2025/000001 |
+| Rina Puspita | Staf Administrasi | PT. Karya Utama | EEAA/2025/000001 |
+| Doni Kurniawan | Staf Keuangan | PT. Nusantara Jaya | EEAA/2025/000002 |
+| Maya Sari | Staf Administrasi | PT. Nusantara Jaya | EEAA/2025/000002 |
+| Hendra Wijaya | Staf IT | PT. Nusantara Jaya | EEAA/2025/000002 |
+| Tono Santoso | Satpam | CV. Berkah Abadi | EEAA/2025/000003 |
+| Wati Rahayu | Satpam | CV. Berkah Abadi | EEAA/2025/000003 |
+| Agus Priyono | Cleaning Service | CV. Berkah Abadi | EEAA/2025/000003 |
+| Dewi Lestari | Cleaning Service | CV. Berkah Abadi | EEAA/2025/000003 |
+| Fajar Nugroho | Supervisor | PT. Karya Utama | EEAA/2025/000001 |
 
 ---
 
-## Tantangan Implementasi
+## Perjanjian Outsource per Klien
 
-Skenario ini lebih kompleks karena:
+Setiap klien memiliki **satu perjanjian outsource** yang mendefinisikan posisi dan kompensasi:
 
-1. **4 skema gaji berbeda** — Operator, Staf Admin, Staf Senior, Satpam, CS, Supervisor
-2. **3 klien berbeda** — dengan struktur tagihan dan margin yang berbeda
-3. **Karyawan yang pindah klien** — Rina Puspita sebelumnya di PT. Nusantara Jaya, pindah ke PT. Karya Utama mulai Februari
-4. **Kenaikan gaji** — Fajar Nugroho naik jabatan dari Operator ke Supervisor mulai Februari
+### `EEAA/2025/000001` — PT. Karya Utama
 
----
+| Posisi | Kuota | Komponen | Rentang |
+|---|---|---|---|
+| Operator Produksi | 5 | Gaji Pokok | Rp 3.800.000 – Rp 5.000.000 |
+| Staf Administrasi | 2 | Gaji Pokok | Rp 4.500.000 – Rp 6.000.000 |
+| Supervisor | 1 | Gaji Pokok | Rp 6.000.000 – Rp 9.000.000 |
 
-## Konfigurasi yang Diperlukan
+### `EEAA/2025/000002` — PT. Nusantara Jaya
 
-### Struktur Gaji yang Dibutuhkan
+| Posisi | Kuota | Komponen | Rentang |
+|---|---|---|---|
+| Staf Keuangan | 2 | Gaji Pokok | Rp 5.500.000 – Rp 8.000.000 |
+| Staf Administrasi | 2 | Gaji Pokok | Rp 4.500.000 – Rp 6.000.000 |
+| Staf IT | 1 | Gaji Pokok | Rp 6.000.000 – Rp 9.000.000 |
 
-```
-Struktur Gaji Dasar Outsource (induk)
-├── Gaji Operator Produksi
-├── Gaji Staf Administrasi
-├── Gaji Staf Senior
-├── Gaji Satpam
-├── Gaji Cleaning Service
-└── Gaji Supervisor
-```
+### `EEAA/2025/000003` — CV. Berkah Abadi
 
-### Tipe Penugasan yang Diperlukan
-
-| Tipe Penugasan | Digunakan Untuk |
-|---|---|
-| `Operator & Teknisi - Klien Industri` | Karyawan posisi Operator/Teknisi ke klien manufaktur |
-| `Staf Kantor - Klien Keuangan & Industri` | Staf Admin/Keuangan/IT ke klien umum |
-| `Satpam - Semua Klien` | Satpam ke semua klien |
-| `Cleaning Service - Semua Klien` | CS ke semua klien |
-| `Supervisor - Klien Premium` | Supervisor ke klien tertentu saja |
+| Posisi | Kuota | Komponen | Rentang |
+|---|---|---|---|
+| Satpam | 3 | Gaji Pokok | Rp 3.500.000 – Rp 4.500.000 |
+| Cleaning Service | 3 | Gaji Pokok | Rp 3.000.000 – Rp 3.800.000 |
 
 ---
 
@@ -82,160 +74,114 @@ Struktur Gaji Dasar Outsource (induk)
 
 ### Kasus 1: Rina Puspita Pindah Klien
 
-Rina sebelumnya ditempatkan di PT. Nusantara Jaya, dan mulai Februari dipindahkan ke PT. Karya Utama.
+Rina sebelumnya di PT. Nusantara Jaya, dipindahkan ke PT. Karya Utama mulai Februari.
 
-**Langkah yang Dilakukan:**
+**Langkah:**
 
-1. **Akhiri penugasan lama Rina di PT. Nusantara Jaya**
-   - Buka penugasan aktif Rina
-   - Klik **Hentikan**
-   - Alasan: `Pemindahan penugasan ke klien lain`
-
-2. **Buat penugasan baru Rina di PT. Karya Utama**
-   - Tipe Penugasan: `Staf Kantor - Klien Keuangan & Industri`
-   - Karyawan: `Rina Puspita`
-   - Klien: `PT. Karya Utama`
+1. **Akhiri penugasan lama** di PT. Nusantara Jaya (Terminate — alasan: Pemindahan)
+2. **Buat penugasan baru** ke PT. Karya Utama:
+   - Perjanjian Outsource: `EEAA/2025/000001`
    - Tanggal Mulai: `01/02/2025`
+3. **Perjanjian gaji Rina tidak perlu diubah** (skema sama, hanya klien berbeda)
 
-3. **Perjanjian gaji Rina** tidak perlu diubah (skema gajinya sama, hanya kliennya berbeda).
-
-!!! warning "Penting: Penugasan dan Perjanjian adalah Dokumen Terpisah"
-    Perubahan penugasan (ke klien mana ditempatkan) TIDAK otomatis mengubah perjanjian gaji. Perubahan perjanjian gaji hanya diperlukan jika skema gaji karyawan berubah.
+!!! warning "Penting"
+    Pastikan penugasan lama **tidak lagi aktif** di bulan Februari, agar saat Termin Pembayaran PT. Nusantara Jaya di-load, Rina tidak ikut terhitung.
 
 ---
 
 ### Kasus 2: Fajar Nugroho Naik Jabatan
 
-Fajar naik dari Operator ke Supervisor, dengan perubahan skema gaji dan nilai gaji.
+Fajar naik dari Operator ke Supervisor mulai Februari, dengan gaji baru.
 
-**Langkah yang Dilakukan:**
+**Langkah:**
 
-1. **Akhiri perjanjian gaji lama Fajar (skema Operator)**
-   - Pastikan slip gaji Januari menggunakan perjanjian lama
-   - Perjanjian lama akan otomatis selesai saat perjanjian baru diaktifkan
-
-2. **Buat perjanjian gaji baru Fajar (skema Supervisor)**
-   - Tipe Perjanjian: `Perjanjian Outsource Supervisor`
-   - Karyawan: `Fajar Nugroho`
-   - Tanggal: `01/02/2025`
+1. **Buat perjanjian gaji baru** untuk Fajar (Supervisor):
    - Struktur Gaji: `Gaji Supervisor`
-   - Input: Gaji Pokok baru (misalnya Rp 7.000.000), Tunjangan Jabatan, dll.
-
-3. **Aktifkan perjanjian baru** → Perjanjian lama otomatis selesai
-
-4. Penugasan Fajar di PT. Karya Utama **tidak perlu diubah** (masih di klien yang sama, hanya jabatan yang berubah).
+   - Input: Gaji Pokok = Rp 7.000.000, Tunjangan Jabatan = Rp 1.000.000
+2. **Aktifkan perjanjian baru** → perjanjian lama otomatis Selesai
+3. **Penugasan Fajar ke PT. Karya Utama tidak berubah** (masih klien yang sama)
 
 ---
 
 ## Pemrosesan Gaji Februari 2025
 
-### Strategi: Batch per Klien
+### Strategi: Satu Batch per Klien
 
-Karena ada 3 klien, lebih efisien membuat **3 batch terpisah** agar mudah saat invoicing.
+Buat 3 batch terpisah — ini memudahkan loading data saat invoicing:
 
-#### Batch 1: PT. Karya Utama
+| Batch | Karyawan | Catatan |
+|---|---|---|
+| `Gaji Feb 2025 - PT. Karya Utama` | Budi, Sari, Ahmad, Rina, Fajar | 5 karyawan; Rina baru masuk bulan ini; Fajar pakai skema baru |
+| `Gaji Feb 2025 - PT. Nusantara Jaya` | Doni, Maya, Hendra | 3 karyawan (Rina sudah tidak di sini) |
+| `Gaji Feb 2025 - CV. Berkah Abadi` | Tono, Wati, Agus, Dewi | 4 karyawan |
 
-**Karyawan yang dimasukkan:**
-- Budi Santoso (Operator)
-- Sari Dewi (Operator)
-- Ahmad Fauzi (Operator)
-- Rina Puspita (Staf Admin) ← pindahan dari Nusantara Jaya
-- Fajar Nugroho (Supervisor) ← skema gaji baru
-
-**Nama Batch:** `Gaji Februari 2025 - PT. Karya Utama`
-
-!!! example "Verifikasi Khusus untuk Bulan Ini"
-    Karena ada perubahan, pastikan:
-    
-    - Rina Puspita hanya muncul di batch PT. Karya Utama (tidak di batch PT. Nusantara Jaya)
-    - Fajar Nugroho menggunakan struktur gaji `Gaji Supervisor` (bukan `Gaji Operator`)
-
-#### Batch 2: PT. Nusantara Jaya
-
-**Karyawan:** Doni Kurniawan, Maya Sari, Hendra Wijaya (3 orang)  
-**Nama Batch:** `Gaji Februari 2025 - PT. Nusantara Jaya`
-
-#### Batch 3: CV. Berkah Abadi
-
-**Karyawan:** Tono Santoso, Wati Rahayu, Agus Priyono, Dewi Lestari (4 orang)  
-**Nama Batch:** `Gaji Februari 2025 - CV. Berkah Abadi`
+!!! example "Checklist Sebelum Membuat Batch"
+    - Rina hanya muncul di batch PT. Karya Utama ✓
+    - Fajar menggunakan struktur `Gaji Supervisor` ✓
+    - Tidak ada karyawan yang masuk dua batch sekaligus ✓
 
 ---
 
-## Invoicing Multi-Klien
+## Invoicing Februari 2025 — 3 Termin Pembayaran
 
-Karena batch sudah dibuat per klien, proses invoicing menjadi lebih mudah.
+Karena ada 3 perjanjian outsource, buat 3 termin pembayaran:
 
-### Invoice 1 — PT. Karya Utama
+### Termin 1 — PT. Karya Utama (`EEAA/2025/000001`)
 
-Ambil data dari **Batch Gaji Februari 2025 - PT. Karya Utama** (5 karyawan):
+1. Buat Termin Pembayaran, Perjanjian: `EEAA/2025/000001`, Periode: `01/02 – 28/02/2025`
+2. Load Penugasan → 5 karyawan ditemukan (termasuk Rina yang baru, tidak termasuk Rina dari Nusantara Jaya)
+3. Load Slip Gaji → 5 slip gaji
+4. Load Baris Slip Gaji → aturan pembayaran teragregasi
 
-!!! example "Rekap Biaya PT. Karya Utama — Februari 2025"
+!!! example "Contoh Aturan Pembayaran (Preview)"
+    | Komponen | Total 5 Karyawan |
+    |---|---|
+    | Gaji Pokok | Rp 23.800.000 |
+    | Tunjangan Jabatan | Rp 1.000.000 |
+    | Tunjangan Lainnya | Rp 4.000.000 |
+    | BPJS Perusahaan | Rp 1.140.000 |
+    | **Subtotal** | **Rp 29.940.000** |
+    | **PPN 11%** | **Rp 3.293.400** |
+    | **Total Invoice** | **Rp 33.233.400** |
 
-    | Karyawan | Posisi | Total Beban Vendor |
-    |---|---|---|
-    | Budi Santoso | Operator | Rp 5.188.000 |
-    | Sari Dewi | Operator | Rp 4.970.000 |
-    | Ahmad Fauzi | Operator | Rp 5.407.000 |
-    | Rina Puspita | Staf Admin | Rp 6.200.000 |
-    | Fajar Nugroho | Supervisor | Rp 9.100.000 |
-    | **Total Beban** | | **Rp 30.865.000** |
-
-    **Nilai Invoice (+ biaya admin 5% + margin 10% + PPN 11%):**
-    
-    Total Invoice = Rp 30.865.000 × 1.15 × 1.11 = **Rp 39.419.000** *(dibulatkan)*
-
----
-
-### Invoice 2 — PT. Nusantara Jaya
-
-!!! example "Rekap Biaya PT. Nusantara Jaya — Februari 2025"
-
-    | Karyawan | Posisi | Total Beban Vendor |
-    |---|---|---|
-    | Doni Kurniawan | Staf Keuangan | Rp 7.500.000 |
-    | Maya Sari | Staf Admin | Rp 5.800.000 |
-    | Hendra Wijaya | Staf IT | Rp 8.200.000 |
-    | **Total Beban** | | **Rp 21.500.000** |
-
-    **Nilai Invoice:** Rp 21.500.000 × 1.15 × 1.11 = **Rp 27.456.000** *(dibulatkan)*
+5. Konfirmasi → Buat Invoice → Invoice `INV/2025/02/0001` ke PT. Karya Utama
 
 ---
 
-### Invoice 3 — CV. Berkah Abadi
+### Termin 2 — PT. Nusantara Jaya (`EEAA/2025/000002`)
 
-!!! example "Rekap Biaya CV. Berkah Abadi — Februari 2025"
+1. Buat Termin, Periode: `01/02 – 28/02/2025`
+2. Load Penugasan → 3 karyawan (Rina tidak muncul karena penugasannya sudah dihentikan)
+3. Load Slip Gaji → 3 slip gaji Doni, Maya, Hendra
+4. Konfirmasi → Buat Invoice → Invoice ke PT. Nusantara Jaya
 
-    | Karyawan | Posisi | Total Beban Vendor |
-    |---|---|---|
-    | Tono Santoso | Satpam | Rp 4.200.000 |
-    | Wati Rahayu | Satpam | Rp 4.200.000 |
-    | Agus Priyono | Cleaning Service | Rp 3.500.000 |
-    | Dewi Lestari | Cleaning Service | Rp 3.500.000 |
-    | **Total Beban** | | **Rp 15.400.000** |
+---
 
-    **Nilai Invoice:** Rp 15.400.000 × 1.12 × 1.11 = **Rp 19.169.000** *(dibulatkan, margin 12% untuk klien ini)*
+### Termin 3 — CV. Berkah Abadi (`EEAA/2025/000003`)
+
+1. Buat Termin, Periode: `01/02 – 28/02/2025`
+2. Load Penugasan → 4 karyawan
+3. Load Slip Gaji → 4 slip gaji
+4. Konfirmasi → Buat Invoice → Invoice ke CV. Berkah Abadi
 
 ---
 
 ## Ringkasan Skenario Lanjutan
 
-Dari skenario ini kita bisa melihat bahwa sistem menangani dengan baik:
+Dari skenario ini kita melihat kemampuan sistem menangani:
 
 - ✅ Banyak karyawan dengan skema gaji berbeda
-- ✅ Karyawan pindah klien di tengah bulan
-- ✅ Karyawan naik jabatan dengan perubahan skema gaji
-- ✅ Batch terpisah per klien untuk memudahkan invoicing
-- ✅ Margin berbeda per klien
+- ✅ 3 perjanjian outsource terpisah per klien
+- ✅ Karyawan pindah klien — termin pembayaran terkait otomatis konsisten
+- ✅ Karyawan naik jabatan — perjanjian gaji baru otomatis menggantikan yang lama
+- ✅ Invoice per klien terbuat otomatis — tidak ada input manual
+- ✅ Margin berbeda per klien (dikonfigurasi di biaya lainnya per perjanjian)
 
 ---
 
-!!! tip "Lessons Learned dari Skenario Ini"
-    
-    1. **Selalu cek perubahan sebelum buat batch** – buat checklist: ada karyawan yang pindah klien? ada yang naik jabatan? ada yang keluar?
-    
-    2. **Batch per klien sangat membantu** – waktu invoicing jadi lebih cepat karena data sudah terkelompok
-    
-    3. **Perjanjian gaji adalah kunci akurasi** – pastikan setiap karyawan selalu ada perjanjian aktif sebelum proses gaji dimulai
-    
-    4. **Rekonsiliasi di akhir bulan** – selalu cocokkan jumlah karyawan aktif (dari data penugasan) dengan jumlah slip gaji yang diproses
+!!! tip "Lessons Learned"
+    1. **Setup perjanjian outsource di awal kontrak** — jangan tunggu mau invoicing baru dibuat
+    2. **Hubungkan penugasan ke perjanjian outsource** saat membuat penugasan, bukan setelahnya
+    3. **Batch per klien** membuat invoicing jauh lebih cepat dan akurat
+    4. **Cek perubahan bulan ini sebelum batch** — ada yang pindah? naik jabatan? keluar?
+    5. **Rekonsiliasi karyawan aktif vs slip gaji yang diproses** sebelum membuat termin pembayaran

@@ -48,27 +48,39 @@ graph LR
 
 ## Modul dan Fungsinya
 
-### 1. Penugasan Karyawan Eksternal (`ssi_employee_external_assignment`)
+### 1. Perjanjian Outsource Vendor–Klien (`ssi_employee_external_assignment_agreement`)
 
-Modul ini mencatat di mana seorang karyawan sedang ditempatkan. Setiap karyawan hanya boleh memiliki **satu penugasan aktif** pada satu waktu.
+Modul ini adalah **inti dari hubungan bisnis vendor dengan klien**. Setiap klien yang menggunakan jasa outsourcing vendor harus memiliki dokumen perjanjian ini.
+
+Informasi yang dicatat meliputi:
+- Klien dan lokasi kerja
+- Posisi pekerjaan yang disediakan beserta kuota jumlah karyawan
+- Rentang kompensasi (minimum–maksimum) per komponen gaji untuk setiap posisi
+- Akun dan jurnal akuntansi untuk penagihan (invoicing)
+- Termin pembayaran (billing period) yang menjadi dasar pembuatan invoice
+
+Ketika periode penagihan tiba, modul ini secara **otomatis membaca data slip gaji** karyawan yang ditugaskan di klien tersebut, menghitung total biaya per komponen, dan menghasilkan **invoice kepada klien** tanpa perlu input manual.
+
+### 2. Penugasan Karyawan Eksternal (`ssi_employee_external_assignment`)
+
+Modul ini mencatat di mana seorang karyawan sedang ditempatkan. Setiap karyawan hanya boleh memiliki **satu penugasan aktif** pada satu waktu. Setiap penugasan wajib terhubung ke **Perjanjian Outsource** yang berlaku antara vendor dan klien.
 
 Informasi yang dicatat meliputi:
 - Karyawan yang ditugaskan
-- Klien tempat karyawan ditempatkan
+- Klien dan perjanjian outsource yang menaungi
 - Tanggal mulai dan selesai penugasan
 - Lokasi spesifik (jika klien memiliki beberapa lokasi)
 
-### 2. Perjanjian Penggajian (`ssi_payroll_agreement`)
+### 3. Perjanjian Penggajian Karyawan (`ssi_payroll_agreement`)
 
-Modul ini mencatat kesepakatan gaji antara vendor dan karyawan. Setiap karyawan hanya boleh memiliki **satu perjanjian gaji aktif** pada satu waktu.
+Modul ini mencatat kesepakatan gaji antara vendor dan **karyawan**. Setiap karyawan hanya boleh memiliki **satu perjanjian gaji aktif** pada satu waktu.
 
 Informasi yang dicatat meliputi:
 - Struktur gaji yang berlaku untuk karyawan ini
 - Komponen gaji yang disepakati
 - Input/nilai khusus (misal: tunjangan tetap tertentu)
-- Dokumen perjanjian resmi
 
-### 3. Slip Gaji (`ssi_hr_payroll`)
+### 4. Slip Gaji (`ssi_hr_payroll`)
 
 Modul ini memproses penggajian karyawan setiap periode. Sistem secara otomatis menghitung total gaji berdasarkan struktur gaji dan komponen yang telah dikonfigurasi.
 
@@ -78,7 +90,7 @@ Proses meliputi:
 - Persetujuan dan pengesahan slip gaji
 - Pencatatan akuntansi
 
-### 4. Batch Gaji (`ssi_hr_payroll_batch`)
+### 5. Batch Gaji (`ssi_hr_payroll_batch`)
 
 Ekstensi dari modul slip gaji yang memungkinkan pemrosesan gaji untuk banyak karyawan sekaligus dalam satu siklus persetujuan.
 
@@ -88,18 +100,16 @@ Ekstensi dari modul slip gaji yang memungkinkan pemrosesan gaji untuk banyak kar
 
 ```mermaid
 flowchart TD
-    A["Karyawan terdaftar\ndi Odoo"] --> B["Tipe Penugasan\ndikonfigurasi"]
-    B --> C["Penugasan Karyawan\nke Klien dibuat"]
-    C --> D["Perjanjian Gaji\ndibuat dan disetujui"]
-    D --> E["Slip Gaji\ndibuat setiap bulan"]
-    E --> F["Slip Gaji\ndisetujui & dikonfirmasi"]
-    F --> G["Pencatatan\nAkuntansi Otomatis"]
-    F --> H["Invoice ke Klien\ndibuat manual"]
-    H --> I["Klien membayar\nInvoice"]
+    A["Perjanjian Outsource\nVendor–Klien dibuat"] --> B["Karyawan ditugaskan\nke Klien (terhubung ke perjanjian)"]
+    B --> C["Perjanjian Gaji Karyawan\ndibuat & disetujui"]
+    C --> D["Slip Gaji\ndibuat & diproses setiap bulan"]
+    D --> E["Termin Pembayaran dibuat:\nLoad penugasan + slip gaji"]
+    E --> F["Invoice ke Klien\nterbuat OTOMATIS dari data slip gaji"]
+    F --> G["Klien membayar\nInvoice"]
 
     style A fill:#e3f2fd
+    style F fill:#fff3e0
     style G fill:#e8f5e9
-    style I fill:#e8f5e9
 ```
 
 ---
@@ -136,6 +146,7 @@ Nomor dokumen (seperti nomor slip gaji, nomor perjanjian) digenerate otomatis ol
 !!! note "Catatan untuk Implementor"
     Sebelum memulai konfigurasi, pastikan modul-modul berikut sudah terinstall di Odoo:
     
+    - `ssi_employee_external_assignment_agreement`
     - `ssi_employee_external_assignment`
     - `ssi_payroll_agreement`
     - `ssi_hr_payroll`
