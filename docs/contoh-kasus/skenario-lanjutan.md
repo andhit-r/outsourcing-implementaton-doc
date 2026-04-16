@@ -103,6 +103,95 @@ Fajar naik dari Operator ke Supervisor mulai Februari, dengan gaji baru.
 
 ---
 
+### Kasus 3: Jumlah Dibayarkan ke Karyawan Berbeda dengan Jumlah Ditagihkan ke Klien
+
+**Situasi:** Dalam perjanjian outsource dengan PT. Nusantara Jaya, tunjangan transportasi yang **ditagihkan ke klien** adalah Rp 600.000/bulan per karyawan. Namun PT. Maju Bersama hanya **membayarkan** Rp 500.000 ke karyawan — selisih Rp 100.000 merupakan margin vendor.
+
+**Masalah:** Satu komponen gaji hanya bisa menyimpan satu nilai. Jika menggunakan satu komponen `Tunjangan Transportasi`, nilai yang dibayar ke karyawan dan yang ditagih ke klien tidak bisa berbeda.
+
+**Solusi: Dua Komponen Gaji**
+
+Buat dua komponen terpisah dalam struktur gaji `Gaji Staf Keuangan` (dan struktur gaji lain untuk klien yang sama):
+
+| Komponen | Nilai | Masuk Take Home Pay? | Ditagih ke Klien? |
+|---|---|---|---|
+| `Tunjangan Transportasi` | Rp 500.000 | ✅ Ya | ❌ Tidak (tidak didaftarkan produk invoice) |
+| `Tagihan Transportasi Klien` | Rp 600.000 | ❌ Tidak | ✅ Ya (punya produk invoice) |
+
+**Konfigurasi komponen `Tagihan Transportasi Klien`:**
+
+| Field | Nilai |
+|---|---|
+| Kategori | `Other` |
+| Not Computed in Net | ✅ Centang (tidak mempengaruhi gaji bersih) |
+| Rumus | `result = 600000` (atau formula dinamis) |
+| Produk Invoice | `Biaya Transportasi Outsource` |
+
+**Hasil di slip gaji Doni Kurniawan:**
+
+| Komponen | Nilai | Keterangan |
+|---|---|---|
+| Gaji Pokok | Rp 6.000.000 | |
+| Tunjangan Transportasi | Rp 500.000 | Dibayarkan ke karyawan |
+| ... (potongan) | | |
+| **Gaji Bersih** | **Rp X** | Yang diterima karyawan |
+| Tagihan Transportasi Klien | Rp 600.000 | Tidak mempengaruhi gaji bersih |
+
+**Saat invoicing:** `Tunjangan Transportasi` tidak ditagih ke klien (tidak punya produk invoice), sedangkan `Tagihan Transportasi Klien` Rp 600.000 masuk ke Aturan Pembayaran dan muncul di invoice PT. Nusantara Jaya sebagai baris terpisah.
+
+!!! tip "Kapan Pola Ini Digunakan?"
+    - Tunjangan yang nilai aktualnya ke karyawan lebih kecil dari nilai yang disepakati dengan klien (ada margin di komponen tertentu)
+    - Biaya yang dibayar vendor ke pihak ketiga (misalnya asuransi tambahan) tapi klien ditagih berbeda
+    - Komponen yang dikenakan pajak di sisi klien namun tidak di sisi karyawan
+
+---
+
+### Kasus 4: Management Fee Berbasis Persentase Gaji
+
+**Situasi:** PT. Nusantara Jaya sepakat membayar **management fee** sebesar 10% dari total gaji pokok seluruh karyawan yang ditempatkan per bulan.
+
+**Masalah:** Management fee ini bukan bagian dari gaji karyawan dan tidak boleh mempengaruhi take-home pay. Namun agar bisa teragregasi secara otomatis melalui mekanisme Termin Pembayaran, management fee harus muncul sebagai komponen di slip gaji.
+
+**Solusi: Komponen Gaji "Non-Net"**
+
+Tambahkan komponen `Management Fee` ke dalam struktur gaji yang dipakai karyawan PT. Nusantara Jaya:
+
+| Field | Nilai |
+|---|---|
+| Nama | `Management Fee` |
+| Kode | `MGT_FEE` |
+| Kategori | `Other` |
+| Not Computed in Net | ✅ Centang |
+| Rumus | `result = inputs.BASIC * 0.10` |
+| Produk Invoice | `Management Fee Outsource` |
+| Pajak Invoice | (sesuai kesepakatan kontrak) |
+
+**Hasil di slip gaji Doni Kurniawan (Gaji Pokok Rp 6.000.000):**
+
+| Komponen | Nilai | Keterangan |
+|---|---|---|
+| Gaji Pokok | Rp 6.000.000 | |
+| Tunjangan | Rp 1.000.000 | |
+| BPJS Karyawan | −Rp 66.000 | |
+| **Gaji Bersih** | **Rp 6.934.000** | Take home pay tidak terpengaruh management fee |
+| Management Fee | Rp 600.000 | Muncul di slip, **tidak masuk gaji bersih** |
+
+**Saat invoicing:** Semua baris `Management Fee` dari 3 karyawan PT. Nusantara Jaya teragregasi otomatis:
+
+| Komponen | Total 3 Karyawan | Produk |
+|---|---|---|
+| ... (gaji) | ... | |
+| Management Fee | Rp 1.650.000 | Management Fee Outsource |
+
+Invoice PT. Nusantara Jaya mencakup satu baris tambahan untuk management fee yang dihitung langsung dari data slip gaji — tanpa input manual.
+
+!!! tip "Kapan Pola Ini Digunakan?"
+    - Management fee, service fee, atau biaya administrasi yang dihitung proporsional terhadap gaji
+    - Biaya lembur yang ditagih ke klien tetapi sudah termasuk dalam take-home pay karyawan secara terpisah
+    - Kontribusi dana sosial atau program klien yang nilainya tergantung gaji namun bukan bagian dari net pay
+
+---
+
 ## Pemrosesan Gaji Februari 2025
 
 ### Strategi: Satu Batch per Klien
@@ -176,6 +265,8 @@ Dari skenario ini kita melihat kemampuan sistem menangani:
 - ✅ Karyawan naik jabatan — perjanjian gaji baru otomatis menggantikan yang lama
 - ✅ Invoice per klien terbuat otomatis — tidak ada input manual
 - ✅ Margin berbeda per klien (dikonfigurasi di biaya lainnya per perjanjian)
+- ✅ Nilai dibayarkan ke karyawan ≠ nilai ditagihkan ke klien — diselesaikan dengan 2 komponen terpisah
+- ✅ Management fee atau biaya berbasis kondisi slip gaji — diselesaikan dengan komponen "non-net"
 
 ---
 
@@ -185,3 +276,5 @@ Dari skenario ini kita melihat kemampuan sistem menangani:
     3. **Batch per klien** membuat invoicing jauh lebih cepat dan akurat
     4. **Cek perubahan bulan ini sebelum batch** — ada yang pindah? naik jabatan? keluar?
     5. **Rekonsiliasi karyawan aktif vs slip gaji yang diproses** sebelum membuat termin pembayaran
+    6. **Jika nilai bayar ≠ nilai tagih**, gunakan 2 komponen: satu masuk take home pay (tanpa produk invoice), satu lagi tidak masuk take home pay (dengan produk invoice)
+    7. **Biaya berbasis kondisi payslip** (management fee, service fee) cukup dengan satu komponen bertanda *Not Computed in Net* — nilainya tetap terbaca oleh Termin Pembayaran saat invoicing
