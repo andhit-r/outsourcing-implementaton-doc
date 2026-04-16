@@ -1,0 +1,82 @@
+site_name: Implementasi Penggajian Outsource — OpenSynergy Indonesia
+site_description: Panduan implementasi pengelolaan penggajian karyawan outsource dan invoicing klien menggunakan modul Odoo 14 SSI
+site_author: PT. Simetri Sinergi Indonesia
+docs_dir: docs
+site_dir: site
+repo_url: https://github.com/andhit-r/outsourcing-implementation-doc
+repo_name: outsourcing-implementation-doc
+
+theme:
+  name: material
+  language: id
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.follow
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+plugins:
+  - search:
+      lang: id
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Beranda: index.md
+  - Konsep:
+    - Gambaran Umum: konsep/gambaran-umum.md
+    - Alur Bisnis End-to-End: konsep/alur-bisnis.md
+    - Struktur & Komponen Gaji: konsep/struktur-gaji.md
+  - Konfigurasi:
+    - Data Master: konfigurasi/data-master.md
+    - Struktur Gaji: konfigurasi/struktur-gaji.md
+    - Tipe Penugasan Karyawan: konfigurasi/tipe-penugasan.md
+    - Tipe Perjanjian Gaji: konfigurasi/tipe-perjanjian.md
+  - Operasional:
+    - Penugasan Karyawan ke Klien: operasional/penugasan-karyawan.md
+    - Perjanjian Gaji Karyawan: operasional/perjanjian-gaji.md
+    - Pemrosesan Slip Gaji: operasional/pemrosesan-gaji.md
+    - Batch Pemrosesan Gaji Massal: operasional/batch-gaji.md
+    - Invoicing ke Klien: operasional/invoicing-klien.md
+  - Contoh Kasus:
+    - Skenario Dasar: contoh-kasus/skenario-dasar.md
+    - Skenario Lanjutan: contoh-kasus/skenario-lanjutan.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/OCA
